@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Eventos Qx">
+<title>Eventos Quirófano</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f2f2f7;
+  color: #1c1c1e;
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+.topbar {
+  background: #ffffff;
+  border-bottom: 0.5px solid #c6c6c8;
+  padding: 16px 20px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar h1 { font-size: 17px; font-weight: 600; color: #1c1c1e; }
+.topbar p { font-size: 12px; color: #8e8e93; margin-top: 2px; }
+
+.content { padding: 16px; max-width: 500px; margin: 0 auto; }
+
+.msg {
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  margin-bottom: 14px;
+  display: none;
+}
+.msg.ok { background: #d1f0e0; color: #1a7a45; }
+.msg.error { background: #fde8e8; color: #c0392b; }
+.msg.loading { background: #e8eaf6; color: #3949ab; }
+
+.search-wrap { background: #ffffff; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.search-wrap label { font-size: 12px; color: #8e8e93; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+.search-wrap input {
+  width: 100%;
+  font-size: 16px;
+  border: none;
+  outline: none;
+  color: #1c1c1e;
+  background: transparent;
+}
+
+.results {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  display: none;
+}
+.result-item {
+  padding: 12px 16px;
+  border-bottom: 0.5px solid #f2f2f7;
+  cursor: pointer;
+  active-background: #f2f2f7;
+}
+.result-item:last-child { border-bottom: none; }
+.result-item:active { background: #f2f2f7; }
+.result-item .rname { font-size: 15px; font-weight: 500; color: #1c1c1e; }
+.result-item .rmeta { font-size: 12px; color: #8e8e93; margin-top: 3px; }
+
+.patient-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  display: none;
+}
+.patient-card .badge {
+  display: inline-block;
+  background: #e3f2fd;
+  color: #1565c0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.patient-card .pname { font-size: 18px; font-weight: 600; color: #1c1c1e; margin-bottom: 12px; }
+.patient-card table { width: 100%; }
+.patient-card td { font-size: 14px; padding: 4px 0; vertical-align: top; }
+.patient-card td:first-child { color: #8e8e93; width: 120px; }
+.patient-card td:last-child { color: #1c1c1e; font-weight: 500; }
+
+.form-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  display: none;
+}
+.form-card h2 { font-size: 13px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 14px; }
+
+.field { margin-bottom: 16px; }
+.field:last-child { margin-bottom: 0; }
+.field label { display: block; font-size: 13px; color: #8e8e93; margin-bottom: 6px; }
+.field input, .field select, .field textarea {
+  width: 100%;
+  font-size: 16px;
+  padding: 10px 12px;
+  border: 1px solid #e5e5ea;
+  border-radius: 10px;
+  background: #f9f9f9;
+  color: #1c1c1e;
+  font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238e8e93' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+.field textarea { resize: vertical; min-height: 80px; }
+.field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: #007aff; background: #fff; }
+.dias-po { font-size: 12px; color: #8e8e93; margin-top: 5px; }
+
+.btn-guardar {
+  width: 100%;
+  padding: 16px;
+  font-size: 17px;
+  font-weight: 600;
+  background: #007aff;
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 10px;
+  display: none;
+}
+.btn-guardar:active { opacity: 0.8; }
+.btn-guardar:disabled { background: #c7c7cc; cursor: not-allowed; }
+
+.btn-nueva {
+  width: 100%;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 500;
+  background: transparent;
+  color: #007aff;
+  border: 1px solid #007aff;
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  display: none;
+}
+.btn-nueva:active { opacity: 0.7; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>Registro de Eventos</h1>
+  <p>Servicio de Cirugía — CIS Termas de Río Hondo</p>
+</div>
+
+<div class="content">
+
+  <div id="msg" class="msg"></div>
+
+  <div class="search-wrap">
+    <label>Paciente</label>
+    <input type="text" id="searchInput" placeholder="Escribí apellido o nombre..." autocomplete="off" autocorrect="off" autocapitalize="off" />
+  </div>
+
+  <div id="resultados" class="results"></div>
+
+  <div id="patientCard" class="patient-card">
+    <div class="badge">Paciente seleccionado</div>
+    <div class="pname" id="pc-nombre"></div>
+    <table>
+      <tr><td>Fecha Qx</td><td id="pc-fecha"></td></tr>
+      <tr><td>DNI</td><td id="pc-dni"></td></tr>
+      <tr><td>Diagnóstico</td><td id="pc-diag"></td></tr>
+      <tr><td>Procedimiento</td><td id="pc-proc"></td></tr>
+      <tr><td>Cirujano</td><td id="pc-cirujano"></td></tr>
+      <tr><td>Servicio</td><td id="pc-servicio"></td></tr>
+    </table>
+  </div>
+
+  <div id="formCard" class="form-card">
+    <h2>Datos del evento</h2>
+
+    <div class="field">
+      <label>Fecha del evento</label>
+      <input type="date" id="fechaEvento" />
+      <div class="dias-po" id="diasPO"></div>
+    </div>
+
+    <div class="field">
+      <label>Tipo de evento</label>
+      <select id="tipoEvento">
+        <option value="">Seleccioná...</option>
+        <option>Infección de herida</option>
+        <option>Complicación postoperatoria</option>
+        <option>Reintervención</option>
+        <option>Seroma</option>
+        <option>Dehiscencia de herida</option>
+        <option>Hematoma</option>
+        <option>Fístula</option>
+        <option>Otro</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Gravedad</label>
+      <select id="gravedad">
+        <option value="">Seleccioná...</option>
+        <option>Leve</option>
+        <option>Moderada</option>
+        <option>Grave</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Descripción clínica</label>
+      <textarea id="descripcion" placeholder="Describí el evento..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Acción tomada</label>
+      <textarea id="accion" placeholder="Tratamiento, conducta, decisión..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Registrado por</label>
+      <input type="text" id="registradoPor" value="Ayuch Guillermo" />
+    </div>
+  </div>
+
+  <button class="btn-guardar" id="btnGuardar" onclick="guardarEvento()">Guardar evento</button>
+  <button class="btn-nueva" id="btnNueva" onclick="nuevaBusqueda()">Buscar otro paciente</button>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const CLIENT_ID = '0j2cwonju51h26n';
+const CLIENT_SECRET = '177qheaic5yvai9';
+const REFRESH_TOKEN = 'F-L46YJxlvYAAAAAAAAW3GAt3OOhRKetiVpaIrt4P1QD3Hi42Z_8SUCNqRI_z-';
+const ARCHIVO_ESTADISTICA = '/estadistica quirofano/ESTADISTICA_QUIROFANO.xlsx';
+const ARCHIVO_EVENTOS = '/estadistica quirofano/EVENTOS.xlsx';
+
+let accessToken = null;
+let pacientes = [];
+let pacienteSeleccionado = null;
+let searchTimer = null;
+
+function mostrarMsg(texto, tipo) {
+  const el = document.getElementById('msg');
+  el.className = 'msg ' + tipo;
+  el.textContent = texto;
+  el.style.display = 'block';
+  if (tipo === 'ok') setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+function ocultarMsg() {
+  document.getElementById('msg').style.display = 'none';
+}
+
+async function getAccessToken() {
+  const resp = await fetch('https://api.dropbox.com/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: REFRESH_TOKEN,
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET
+    })
+  });
+  const data = await resp.json();
+  if (!data.access_token) throw new Error('No se pudo obtener token de acceso');
+  accessToken = data.access_token;
+  return accessToken;
+}
+
+async function descargarArchivo(path) {
+  const token = accessToken || await getAccessToken();
+  const resp = await fetch('https://content.dropboxapi.com/2/files/download', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Dropbox-API-Arg': JSON.stringify({ path })
+    }
+  });
+  if (!resp.ok) throw new Error('No se pudo descargar: ' + path);
+  return await resp.arrayBuffer();
+}
+
+async function cargarPacientes() {
+  if (pacientes.length > 0) return;
+  mostrarMsg('Cargando base de pacientes...', 'loading');
+  try {
+    await getAccessToken();
+    const buf = await descargarArchivo(ARCHIVO_ESTADISTICA);
+    const wb = XLSX.read(buf, { type: 'array' });
+    pacientes = [];
+    for (const sheetName of wb.SheetNames) {
+      const ws = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      for (const row of rows) {
+        const nombre = (row['NOMBRE '] || row['NOMBRE'] || '').toString().trim();
+        if (nombre.length > 2) {
+          pacientes.push({
+            nombre,
+            fecha: row['FECHA'] || '',
+            dni: row['DNI'] || '',
+            diagnostico: row['DIAGNOSTICO'] || '',
+            procedimiento: row['PROCEDIMIENTO'] || '',
+            cirujano: row['CIRUJANO'] || '',
+            servicio: row['SERVICIO'] || '',
+            anio: sheetName
+          });
+        }
+      }
+    }
+    ocultarMsg();
+  } catch(e) {
+    mostrarMsg('Error al cargar pacientes: ' + e.message, 'error');
+  }
+}
+
+function formatFecha(val) {
+  if (!val) return '';
+  if (typeof val === 'number') {
+    const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+    return d.toLocaleDateString('es-AR');
+  }
+  if (val instanceof Date) return val.toLocaleDateString('es-AR');
+  return val.toString().split('T')[0];
+}
+
+function normalizar(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function buscar(texto) {
+  const el = document.getElementById('resultados');
+  if (!texto || texto.length < 2) { el.style.display = 'none'; return; }
+  const t = normalizar(texto);
+  const encontrados = pacientes.filter(p => normalizar(p.nombre).includes(t)).slice(0, 8);
+  if (encontrados.length === 0) {
+    el.innerHTML = '<div style="padding:12px 16px;font-size:14px;color:#8e8e93">Sin resultados</div>';
+    el.style.display = 'block';
+    return;
+  }
+  el.innerHTML = encontrados.map((p, i) =>
+    `<div class="result-item" onclick="seleccionar(${i})">
+      <div class="rname">${p.nombre}</div>
+      <div class="rmeta">${formatFecha(p.fecha)} · ${p.procedimiento}</div>
+    </div>`
+  ).join('');
+  el._data = encontrados;
+  el.style.display = 'block';
+}
+
+function seleccionar(idx) {
+  const el = document.getElementById('resultados');
+  pacienteSeleccionado = el._data[idx];
+  el.style.display = 'none';
+  document.getElementById('searchInput').value = pacienteSeleccionado.nombre;
+
+  document.getElementById('pc-nombre').textContent = pacienteSeleccionado.nombre;
+  document.getElementById('pc-fecha').textContent = formatFecha(pacienteSeleccionado.fecha);
+  document.getElementById('pc-dni').textContent = pacienteSeleccionado.dni;
+  document.getElementById('pc-diag').textContent = pacienteSeleccionado.diagnostico;
+  document.getElementById('pc-proc').textContent = pacienteSeleccionado.procedimiento;
+  document.getElementById('pc-cirujano').textContent = pacienteSeleccionado.cirujano;
+  document.getElementById('pc-servicio').textContent = pacienteSeleccionado.servicio;
+
+  const hoy = new Date().toISOString().split('T')[0];
+  document.getElementById('fechaEvento').value = hoy;
+  calcularDiasPO();
+
+  document.getElementById('patientCard').style.display = 'block';
+  document.getElementById('formCard').style.display = 'block';
+  document.getElementById('btnGuardar').style.display = 'block';
+  document.getElementById('btnNueva').style.display = 'block';
+  document.getElementById('patientCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+function calcularDiasPO() {
+  const fechaEv = document.getElementById('fechaEvento').value;
+  const p = pacienteSeleccionado;
+  if (!fechaEv || !p || !p.fecha) { document.getElementById('diasPO').textContent = ''; return; }
+  let fechaCir;
+  if (typeof p.fecha === 'number') {
+    fechaCir = new Date(Math.round((p.fecha - 25569) * 86400 * 1000));
+  } else { fechaCir = new Date(p.fecha); }
+  const diff = Math.round((new Date(fechaEv) - fechaCir) / 86400000);
+  document.getElementById('diasPO').textContent = diff >= 0 ? diff + ' días postoperatorio' : '';
+}
+
+document.getElementById('fechaEvento').addEventListener('change', calcularDiasPO);
+
+async function guardarEvento() {
+  const fechaEv = document.getElementById('fechaEvento').value;
+  const tipo = document.getElementById('tipoEvento').value;
+  const gravedad = document.getElementById('gravedad').value;
+  const desc = document.getElementById('descripcion').value.trim();
+  const accion = document.getElementById('accion').value.trim();
+  const registrado = document.getElementById('registradoPor').value.trim();
+
+  if (!fechaEv || !tipo || !gravedad) {
+    mostrarMsg('Completá fecha, tipo de evento y gravedad.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btnGuardar');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+  mostrarMsg('Guardando en Dropbox...', 'loading');
+
+  try {
+    const token = accessToken || await getAccessToken();
+    let rows = [];
+    let wb;
+
+    try {
+      const buf = await descargarArchivo(ARCHIVO_EVENTOS);
+      wb = XLSX.read(buf, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+    } catch(e) {
+      wb = XLSX.utils.book_new();
+    }
+
+    let diasPO = '';
+    if (pacienteSeleccionado.fecha) {
+      let fechaCir;
+      if (typeof pacienteSeleccionado.fecha === 'number') {
+        fechaCir = new Date(Math.round((pacienteSeleccionado.fecha - 25569) * 86400 * 1000));
+      } else { fechaCir = new Date(pacienteSeleccionado.fecha); }
+      const diff = Math.round((new Date(fechaEv) - fechaCir) / 86400000);
+      if (diff >= 0) diasPO = diff;
+    }
+
+    rows.push({
+      'Fecha registro': new Date().toLocaleDateString('es-AR'),
+      'Paciente': pacienteSeleccionado.nombre,
+      'DNI': pacienteSeleccionado.dni,
+      'Fecha cirugia': formatFecha(pacienteSeleccionado.fecha),
+      'Diagnostico': pacienteSeleccionado.diagnostico,
+      'Procedimiento': pacienteSeleccionado.procedimiento,
+      'Cirujano': pacienteSeleccionado.cirujano,
+      'Servicio': pacienteSeleccionado.servicio,
+      'Fecha evento': fechaEv,
+      'Dias PO': diasPO,
+      'Tipo de evento': tipo,
+      'Gravedad': gravedad,
+      'Descripcion': desc,
+      'Accion tomada': accion,
+      'Registrado por': registrado
+    });
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    if (!wb.SheetNames || wb.SheetNames.length === 0) {
+      XLSX.utils.book_append_sheet(wb, ws, 'Eventos');
+    } else {
+      wb.Sheets[wb.SheetNames[0]] = ws;
+    }
+
+    const xlsxBuf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+    const blob = new Blob([xlsxBuf], { type: 'application/octet-stream' });
+
+    const uploadResp = await fetch('https://content.dropboxapi.com/2/files/upload', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Dropbox-API-Arg': JSON.stringify({ path: ARCHIVO_EVENTOS, mode: 'overwrite' }),
+        'Content-Type': 'application/octet-stream'
+      },
+      body: blob
+    });
+
+    if (!uploadResp.ok) throw new Error('Error al subir a Dropbox');
+
+    mostrarMsg('Evento guardado en EVENTOS.xlsx', 'ok');
+    limpiarFormulario();
+
+  } catch(e) {
+    mostrarMsg('Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Guardar evento';
+  }
+}
+
+function limpiarFormulario() {
+  document.getElementById('tipoEvento').value = '';
+  document.getElementById('gravedad').value = '';
+  document.getElementById('descripcion').value = '';
+  document.getElementById('accion').value = '';
+  document.getElementById('diasPO').textContent = '';
+}
+
+function nuevaBusqueda() {
+  pacienteSeleccionado = null;
+  document.getElementById('searchInput').value = '';
+  document.getElementById('patientCard').style.display = 'none';
+  document.getElementById('formCard').style.display = 'none';
+  document.getElementById('btnGuardar').style.display = 'none';
+  document.getElementById('btnNueva').style.display = 'none';
+  document.getElementById('resultados').style.display = 'none';
+  ocultarMsg();
+  document.getElementById('searchInput').focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+const inp = document.getElementById('searchInput');
+inp.addEventListener('input', async function() {
+  clearTimeout(searchTimer);
+  if (pacientes.length === 0) await cargarPacientes();
+  searchTimer = setTimeout(() => buscar(this.value), 250);
+});
+
+inp.addEventListener('focus', () => { if (pacientes.length === 0) cargarPacientes(); });
+</script>
+</body>
+</html>
